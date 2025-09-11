@@ -37,6 +37,15 @@ export default function LoginClient() {
   return (
     <div className="flex items-center justify-center h-[100dvh] ">
       <GradientBackground />
+      <div className="absolute top-6 left-6 z-30">
+        <Image
+          src="https://framerusercontent.com/images/QDFzZIBNNdIBlRCbQjCsrw1srSQ.svg"
+          alt="MinCFO"
+          height={14}
+          width={90}
+          className="w-auto"
+        />
+      </div>
       <Card className="p-6 w-[375px] z-10">
         <Image
           src="https://framerusercontent.com/images/wA1VuWB2hJTmPECUOk81HM535U.svg"

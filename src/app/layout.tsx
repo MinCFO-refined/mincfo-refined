@@ -7,7 +7,7 @@ import { SidebarWrapper } from "@/components/sidebar-wrapper";
 import Providers from "./providers";
 import Nav from "@/layout/nav";
 import { getUser } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -24,7 +24,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const user = await getUser();
-  
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body

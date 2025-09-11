@@ -26,6 +26,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import type { User } from "@supabase/supabase-js";
+import { ModeToggle } from "./ui/mode-toggle";
 
 export function NavUser({ user }: { user: User }) {
   const { isMobile } = useSidebar();
@@ -89,6 +90,7 @@ export function NavUser({ user }: { user: User }) {
                 <Bell />
                 Notifications
               </DropdownMenuItem>
+              <ModeToggle />
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={signOut}>

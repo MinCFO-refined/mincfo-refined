@@ -1,20 +1,9 @@
 "use client";
 import * as React from "react";
-import {
-  AudioWaveform,
-  BookOpen,
-  Bot,
-  Command,
-  Frame,
-  GalleryVerticalEnd,
-  Map,
-  PieChart,
-  Settings2,
-  SquareTerminal,
-} from "lucide-react";
+import { GalleryVerticalEnd, Settings2, SquareTerminal } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
-import { NavProjects } from "@/components/nav-projects";
+
 import { NavUser } from "@/components/nav-user";
 import { TeamSwitcher } from "@/components/team-switcher";
 import {
@@ -22,8 +11,11 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
+  SidebarRail,
 } from "@/components/ui/sidebar";
-import type { User } from "@supabase/supabase-js";
+
+import { UserWithProfile } from "@/lib/supabase/server";
+import { Company } from "@/types/fortnox";
 import Image from "next/image";
 
 // This is sample data.
@@ -37,70 +29,21 @@ const data = {
   ],
   navMain: [
     {
-      title: "Playground",
-      url: "#",
+      title: "Ekonomi",
+      url: "/ekonomi",
       icon: SquareTerminal,
       isActive: true,
       items: [
         {
-          title: "History",
-          url: "#",
-        },
-        {
-          title: "Starred",
-          url: "#",
-        },
-        {
-          title: "Settings",
-          url: "#",
+          title: "Översikt",
+          url: "översikt",
         },
       ],
     },
-    {
-      title: "Models",
-      url: "#",
-      icon: Bot,
-      items: [
-        {
-          title: "Genesis",
-          url: "#",
-        },
-        {
-          title: "Explorer",
-          url: "#",
-        },
-        {
-          title: "Quantum",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Documentation",
-      url: "#",
-      icon: BookOpen,
-      items: [
-        {
-          title: "Introduction",
-          url: "#",
-        },
-        {
-          title: "Get Started",
-          url: "#",
-        },
-        {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
-          url: "#",
-        },
-      ],
-    },
+
     {
       title: "Settings",
-      url: "#",
+      url: "/inställningar",
       icon: Settings2,
       items: [
         {
@@ -122,51 +65,45 @@ const data = {
       ],
     },
   ],
-  projects: [
-    {
-      name: "Design Engineering",
-      url: "#",
-      icon: Frame,
-    },
-    {
-      name: "Sales & Marketing",
-      url: "#",
-      icon: PieChart,
-    },
-    {
-      name: "Travel",
-      url: "#",
-      icon: Map,
-    },
-  ],
 };
 
 export function AppSidebarClient({
   user,
+  companies,
   ...props
-}: { user: User } & React.ComponentProps<typeof Sidebar>) {
+}: { user: UserWithProfile; companies?: Company[] } & React.ComponentProps<
+  typeof Sidebar
+>) {
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
-        {/* <TeamSwitcher teams={data.teams} /> */}
-        <div className="flex items-center">
-          <Image
-            src="https://framerusercontent.com/images/wA1VuWB2hJTmPECUOk81HM535U.svg"
-            alt="Logo"
-            height={24}
-            width={24}
-            className="m-3"
-          />
-          <h1 className="font-semibold">Portal</h1>
-        </div>
+      <SidebarHeader
+        className={` ${
+          user.profile?.is_admin ? "p-0" : ""
+        } group-data-[collapsible=icon]:p-2 `}
+      >
+        {user.profile?.is_admin ? (
+          <TeamSwitcher companies={companies} />
+        ) : (
+          <div className="p-1 mb-5 flex items-center space-x-4">
+            <Image
+              src="https://framerusercontent.com/images/wA1VuWB2hJTmPECUOk81HM535U.svg"
+              alt="Logo"
+              height={24}
+              width={24}
+            />
+            <h1 className="font-semibold group-data-[collapsible=icon]:hidden">
+              Portal
+            </h1>
+          </div>
+        )}
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={user} />
       </SidebarFooter>
+      <SidebarRail />
     </Sidebar>
   );
 }

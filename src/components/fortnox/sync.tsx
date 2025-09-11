@@ -7,7 +7,7 @@ export default function SyncFortnox() {
     const redirectUri = `${window.location.origin}/api/fortnox/callback`;
     const scope = "companyinformation bookkeeping";
     const state = Math.random().toString(36).substring(2, 15);
-
+    document.cookie = `fortnox-oauth_state=${state}; path=/; SameSite=Lax`;
     const authUrl =
       `https://apps.fortnox.se/oauth-v1/auth?` +
       `client_id=${process.env.NEXT_PUBLIC_FORTNOX_CLIENT_ID}&` +

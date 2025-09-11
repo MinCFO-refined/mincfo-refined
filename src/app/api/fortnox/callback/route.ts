@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { cookies } from "next/headers";
 
 export async function GET(req: NextRequest) {
   const code = req.nextUrl.searchParams.get("code");
-  const state = req.nextUrl.searchParams.get("state");
+  const queryState = req.nextUrl.searchParams.get("state");
+  const cookieStore = await cookies();
+  const stateFromCookie = cookieStore.get("fortnox-oauth_state")?.value;
 
   if (!code) {
     return NextResponse.json({ error: "Missing code" }, { status: 400 });
+  }
+  if (!queryState || queryState !== stateFromCookie) {
+    return NextResponse.json({ error: "Invalid state" }, { status: 400 });
   }
 
   const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/fortnox/callback`;
