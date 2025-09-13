@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 
+interface FortnoxTokenResponse {
+  access_token: string;
+  refresh_token: string;
+  scope: string;
+  expires_in: number;
+  token_type: string;
+  error?: string;
+  error_description?: string;
+}
 export async function GET(req: NextRequest) {
   const code = req.nextUrl.searchParams.get("code");
   const queryState = req.nextUrl.searchParams.get("state");
@@ -38,17 +47,17 @@ export async function GET(req: NextRequest) {
   });
 
   const text = await res.text();
-  let tokens: any;
+  let token: FortnoxTokenResponse;
   try {
-    tokens = JSON.parse(text);
+    token = JSON.parse(text);
   } catch {
     return NextResponse.json(
       { error: "Invalid JSON from Fortnox", raw: text },
       { status: 500 }
     );
   }
-  if (!res.ok || tokens.error) {
-    return NextResponse.json(tokens ?? { error: "token_error", raw: text }, {
+  if (!res.ok || token.error) {
+    return NextResponse.json(token ?? { error: "token_error", raw: text }, {
       status: 400,
     });
   }
@@ -60,18 +69,34 @@ export async function GET(req: NextRequest) {
   if (!user)
     return NextResponse.json({ error: "No user session" }, { status: 401 });
 
-  const { error } = await supabase.from("fortnox_integrations").insert({
-    access_token: tokens.access_token,
-    refresh_token: tokens.refresh_token,
-    scope: tokens.scope,
-    expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
-    is_active: true,
-    user_id: user.id,
-  });
-  if (error)
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  const { data: existing } = await supabase
+    .from("fortnox_integrations")
+    .select("id")
+    .eq("user_id", user.id)
+    .maybeSingle();
 
-  return NextResponse.redirect(
-    `${process.env.NEXT_PUBLIC_APP_URL}/integrations/fortnox`
+  const { error } = await supabase.from("fortnox_integrations").upsert(
+    {
+      user_id: user.id,
+      access_token: token.access_token,
+      refresh_token: token.refresh_token,
+      scope: token.scope,
+      expires_at: new Date(Date.now() + token.expires_in * 1000).toISOString(),
+      is_active: true,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id" }
   );
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  if (existing) {
+    return NextResponse.redirect(
+      `${process.env.NEXT_PUBLIC_APP_URL}/org/portal/dashboard`
+    );
+  } else {
+    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/org/sync`);
+  }
 }

@@ -1,30 +1,40 @@
+"use server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import type { User } from "@supabase/supabase-js";
+import type { User as SupabaseUser } from "@supabase/supabase-js";
+import { Database } from "@/types/supabase";
+import { Company } from "@/types/fortnox";
+import { isAdmin } from "../utils";
 
 // Define the profile type based on your database schema
 export interface Profile {
   id: string;
-  first_name?: string;
-  // last_name?: string;
-  email?: string;
+  first_name: string | null;
+  // last_name: string;
+  email: string;
   // avatar_url?: string;
   // role?: string;
-  created_at?: string;
-  updated_at?: string;
-  company_i?: string;
+  created_at: string;
+  updated_at: string;
+  company_id?: string | null;
   is_admin: boolean;
   // Add other fields as needed based on your profiles table
 }
 
-export interface UserWithProfile extends User {
+export interface User extends SupabaseUser {
   profile?: Profile;
+  company: Company;
 }
 
+export interface Admin extends SupabaseUser {
+  profile: Profile & { is_admin: true; email: "admin@mincfo.com" };
+  companies: Company[];
+}
+export type AppUser = User | Admin;
 export async function createClient() {
   const cookieStore = await cookies();
 
-  return createServerClient(
+  return createServerClient<Database>(
     process.env.SUPABASE_URL!,
     process.env.SUPABASE_PUBLISHABLE_KEY!,
     {
@@ -48,8 +58,9 @@ export async function createClient() {
   );
 }
 
-export async function getUser(): Promise<UserWithProfile | null> {
+export async function getUser(): Promise<AppUser | null> {
   const supabase = await createClient();
+
   const {
     data: { user },
     error: authError,
@@ -64,13 +75,19 @@ export async function getUser(): Promise<UserWithProfile | null> {
     .single();
 
   if (profileError) {
-    console.warn("Failed to fetch user profile:", profileError.message);
-
-    return user as UserWithProfile;
+    console.error("Failed to fetch profile:", profileError.message);
+    return null;
   }
 
-  return {
-    ...user,
-    profile,
-  } as UserWithProfile;
+  const query = supabase.from("companies").select("*");
+
+  if (isAdmin(profile)) {
+    // admin → fetch all companies
+    const { data: companies } = await query;
+    return { ...user, profile, companies: companies ?? [] } as Admin;
+  } else {
+    // normal user → fetch their company
+    const { data: company } = await query.eq("user_id", user.id).single();
+    return { ...user, profile, company } as User;
+  }
 }

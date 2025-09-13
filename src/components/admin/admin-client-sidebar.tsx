@@ -20,30 +20,20 @@ import {
   SidebarMenu,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { User } from "@/lib/supabase/server";
+import { UserWithProfileAndCompanies } from "@/lib/supabase/server";
 import { Company } from "@/types/fortnox";
 import Image from "next/image";
-import { Link } from "lucide-react";
-import { TeamSwitcher } from "./team-switcher";
+import { Link, UserPlus } from "lucide-react";
+import { TeamSwitcher } from "../team-switcher";
+import { isAdmin } from "@/lib/utils";
 
 const data = {
   navMain: [
     {
-      title: "Dashboard",
-      url: "/org/portal/dashboard",
-      icon: IconDashboard,
-    },
-
-    {
-      title: "Analys",
-      url: "/org/portal/analysis",
-      icon: IconChartBar,
-    },
-
-    {
-      title: "Fortnox",
-      url: "/org/portal/fortnox-integration",
-      icon: Link,
+      title: "Lägg till kund",
+      url: "/admin/add-customer",
+      icon: UserPlus,
+      adminView: true,
     },
   ],
   navClouds: [],
@@ -84,11 +74,11 @@ const data = {
 };
 export interface AppSidebarClientProps
   extends React.ComponentProps<typeof Sidebar> {
-  user: User;
-  company: Company;
+  user: UserWithProfileAndCompanies;
+  companies: Company[];
 }
-export function AppSidebarClient({
-  company,
+export function AdminSidebarClient({
+  companies,
   user,
   ...props
 }: AppSidebarClientProps) {
@@ -108,6 +98,7 @@ export function AppSidebarClient({
             </div>
           </SidebarMenuItem>
         </SidebarMenu>
+        <TeamSwitcher companies={companies} />
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} user={user} />

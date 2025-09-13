@@ -30,7 +30,7 @@ export default function LoginClient() {
       console.error(error);
       return setErrorMsg(error);
     } else {
-      router.replace("/");
+      router.replace("/org/portal/dashboard");
     }
   }
 
@@ -42,8 +42,7 @@ export default function LoginClient() {
           src="https://framerusercontent.com/images/QDFzZIBNNdIBlRCbQjCsrw1srSQ.svg"
           alt="MinCFO"
           height={14}
-          width={90}
-          className="w-auto"
+          width={125}
         />
       </div>
       <Card className="p-6 w-[375px] z-10">

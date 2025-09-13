@@ -1,22 +1,18 @@
-import { fetchCompanies } from "@/lib/fortnox";
+import { Company } from "@/types/fortnox";
 import { AppSidebarClient } from "./app-client-sidebar";
-import { getUser } from "@/lib/supabase/server";
+import { User } from "@/lib/supabase/server";
 
-export async function AppSidebar(
-  props: Omit<
-    React.ComponentProps<typeof AppSidebarClient>,
-    "user" | "companies"
-  >
-) {
-  const user = await getUser();
-  if (!user) return null;
-  const companies = user.profile?.is_admin ? await fetchCompanies() : undefined;
+interface AppSidebarProps
+  extends React.ComponentProps<typeof AppSidebarClient> {
+  user: User;
+  company: Company;
+}
+export async function AppSidebar({ company, user, ...props }: AppSidebarProps) {
   return (
     <AppSidebarClient
       user={user}
-      companies={companies}
+      company={company}
       variant="inset"
-      className="border-r"
       {...props}
     />
   );

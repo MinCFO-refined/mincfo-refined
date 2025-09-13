@@ -14,6 +14,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserWithProfileAndCompanies } from "@/lib/supabase/server";
+import { isAdmin } from "@/lib/utils";
 
 export function NavMain({
   items,
@@ -23,7 +24,6 @@ export function NavMain({
     title: string;
     url: string;
     icon?: Icon | LucideIcon;
-    adminView?: boolean;
   }[];
   user: UserWithProfileAndCompanies;
 }) {

@@ -3,4 +3,5 @@ export interface Company {
   name: string;
   created_at: string;
   updated_at: string;
+  organisation_number?: string;
 }

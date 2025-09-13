@@ -2,7 +2,7 @@
 import { Link } from "lucide-react";
 import { Button } from "../ui/button";
 
-export default function SyncFortnox() {
+export default function SyncFortnoxButton() {
   function connect() {
     const redirectUri = `${window.location.origin}/api/fortnox/callback`;
     const scope = "companyinformation bookkeeping";
@@ -20,9 +20,9 @@ export default function SyncFortnox() {
     window.location.href = authUrl;
   }
   return (
-    <Button size="sm" className="flex gap-3" onClick={connect}>
+    <Button className="flex gap-3 text-base" onClick={connect}>
       <Link />
-      Koppla
+      Anslut till Fortnox
     </Button>
   );
 }
