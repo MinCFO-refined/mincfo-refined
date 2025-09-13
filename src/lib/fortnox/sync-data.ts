@@ -27,7 +27,7 @@ type FortnoxVoucherDetail = {
     Project?: string | null;
     ReferenceNumber?: string | null;
     ReferenceType?: string | null;
-    Transactions?: Array<{
+    VoucherRows?: Array<{
       Account: number;
       Debit?: number | null;
       Credit?: number | null;
@@ -114,18 +114,29 @@ async function getValidTokens() {
 
   return { supabase, access_token, integrationId };
 }
-const limiter = new Bottleneck({
-  reservoir: 25, // max 20 requests per 5 sek
+// --- Rate limiting setup ---
+// Fortnox: 25 req / 5s AND 300 / minute (sliding window)
+// To respect sliding window and prevent bursts, add minTime spacing
+const limiter5s = new Bottleneck({
+  reservoir: 25,
   reservoirRefreshAmount: 25,
-  reservoirRefreshInterval: 5000, // refill var 5:e sekund
-  maxConcurrent: 5, // upp till 5 parallella
+  reservoirRefreshInterval: 5000,
+  minTime: 250, // 5000ms / 25 = 200ms minimum between requests
+  maxConcurrent: 1, // Limit concurrency to ensure spacing
 });
+const limiter1m = new Bottleneck({
+  reservoir: 300,
+  reservoirRefreshAmount: 300,
+  reservoirRefreshInterval: 60_000,
+  maxConcurrent: 10,
+});
+limiter5s.chain(limiter1m);
 
 async function limitedFetch<T>(
   url: string,
   headers: Record<string, string>
 ): Promise<T> {
-  return limiter.schedule(async () => {
+  return limiter5s.schedule(async () => {
     const res = await fetch(url, { headers });
     if (!res.ok) {
       throw new Error(`Fortnox error ${res.status}: ${await res.text()}`);
@@ -177,22 +188,22 @@ export async function syncFortnox(user: User) {
 
   console.log(`📑 Hittade ${voucherHeaders.length} vouchers (headers)`);
 
-  // 2) Hämta detaljer per voucher (begränsa för test)
-  const TEMP_LIMIT = 5;
-  const limitedHeaders = voucherHeaders.slice(0, TEMP_LIMIT);
-
-  const details = await Promise.all(
-    limitedHeaders.map((v) =>
-      limitedFetch<FortnoxVoucherDetail>(
-        `https://api.fortnox.se/3/vouchers/${encodeURIComponent(
-          v.VoucherSeries
-        )}/${encodeURIComponent(
-          v.VoucherNumber
-        )}?financialyear=${encodeURIComponent(v.Year)}`,
-        headers
-      )
-    )
-  );
+  // 2) Hämta detaljer per voucher med rate limiting & progress (fetching all)
+  const details: FortnoxVoucherDetail[] = [];
+  let processed = 0;
+  for (const v of voucherHeaders) {
+    const detail = await limitedFetch<FortnoxVoucherDetail>(
+      `https://api.fortnox.se/3/vouchers/${encodeURIComponent(
+        v.VoucherSeries
+      )}/${encodeURIComponent(
+        v.VoucherNumber
+      )}?financialyear=${encodeURIComponent(v.Year)}`,
+      headers
+    );
+    details.push(detail);
+    processed++;
+    console.log(`Fetched detail ${processed}/${voucherHeaders.length}`);
+  }
 
   // 3) Bygg vouchers + transactions
   const vouchers: VoucherInsert[] = [];
@@ -221,22 +232,29 @@ export async function syncFortnox(user: User) {
     });
 
     if (voucher.VoucherRows?.length) {
-      voucher.VoucherRows.forEach((t, idx) => {
-        transactions.push({
-          id: `${voucherId}-${idx + 1}`,
-          voucher_id: voucherId,
-          account: t.Account,
-          debit: t.Debit ?? null,
-          credit: t.Credit ?? null,
-          description: t.Description ?? null,
-          transaction_information: t.TransactionInformation ?? null,
-          quantity: t.Quantity ?? null,
-          cost_center: t.CostCenter ?? null,
-          project: t.Project ?? null,
-          removed: t.Removed ?? null,
-          created_at: new Date().toISOString(),
-        });
-      });
+      voucher.VoucherRows.forEach(
+        (
+          t: NonNullable<
+            FortnoxVoucherDetail["Voucher"]["VoucherRows"]
+          >[number],
+          idx: number
+        ) => {
+          transactions.push({
+            id: `${voucherId}-${idx + 1}`,
+            voucher_id: voucherId,
+            account: t.Account,
+            debit: t.Debit ?? null,
+            credit: t.Credit ?? null,
+            description: t.Description ?? null,
+            transaction_information: t.TransactionInformation ?? null,
+            quantity: t.Quantity ?? null,
+            cost_center: t.CostCenter ?? null,
+            project: t.Project ?? null,
+            removed: t.Removed ?? null,
+            created_at: new Date().toISOString(),
+          });
+        }
+      );
     }
   });
 
