@@ -13,24 +13,24 @@ export default async function InitialSync() {
     .eq("user_id", user.id)
     .single();
 
-  // if (error || !integration) {
-  //   return (
-  //     <main className="h-[100dvh] flex items-center justify-center text-xl font-semibold">
-  //       <h1>No active Fortnox integration</h1>
-  //     </main>
-  //   );
-  // }
+  if (error || !integration) {
+    return (
+      <main className="h-[100dvh] flex items-center justify-center text-xl font-semibold">
+        <h1>No active Fortnox integration</h1>
+      </main>
+    );
+  }
 
-  // if (integration.has_synced && integration.last_synced_at) {
-  //   return (
-  //     <main className="h-[100dvh] flex items-center justify-center text-xl font-semibold">
-  //       <h1>
-  //         Already synced on{" "}
-  //         {new Date(integration.last_synced_at).toLocaleString()}
-  //       </h1>
-  //     </main>
-  //   );
-  // }
+  if (integration.has_synced && integration.last_synced_at) {
+    return (
+      <main className="h-[100dvh] flex items-center justify-center text-xl font-semibold">
+        <h1>
+          Already synced on{" "}
+          {new Date(integration.last_synced_at).toLocaleString()}
+        </h1>
+      </main>
+    );
+  }
   const result = await syncFortnox(user as User);
   return (
     <main className="h-[100dvh] flex items-center justify-center text-xl font-semibold">

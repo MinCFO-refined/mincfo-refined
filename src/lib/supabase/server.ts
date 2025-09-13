@@ -5,6 +5,7 @@ import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { Database } from "@/types/supabase";
 import { Company } from "@/types/fortnox";
 import { isAdmin } from "../utils";
+import { FortnoxFinancialYear } from "../fortnox/types";
 
 // Define the profile type based on your database schema
 export interface Profile {
@@ -24,6 +25,7 @@ export interface Profile {
 export interface User extends SupabaseUser {
   profile?: Profile;
   company: Company;
+  fiscalYear?: FortnoxFinancialYear;
 }
 
 export interface Admin extends SupabaseUser {
@@ -58,7 +60,7 @@ export async function createClient() {
   );
 }
 
-export async function getUser(): Promise<AppUser | null> {
+export async function getUser(): Promise<User | Admin | null> {
   const supabase = await createClient();
 
   const {
@@ -79,15 +81,53 @@ export async function getUser(): Promise<AppUser | null> {
     return null;
   }
 
+  // companies query
   const query = supabase.from("companies").select("*");
 
   if (isAdmin(profile)) {
-    // admin → fetch all companies
+    // 👑 admin → fetch all companies + their fiscal years
     const { data: companies } = await query;
-    return { ...user, profile, companies: companies ?? [] } as Admin;
+
+    let companiesWithYears = companies ?? [];
+
+    if (companiesWithYears.length > 0) {
+      const companyIds = companiesWithYears.map((c) => c.id);
+
+      const { data: fiscalYears } = await supabase
+        .from("fiscal_years")
+        .select("*")
+        .in("company_id", companyIds);
+
+      // merge fiscal years into each company
+      companiesWithYears = companiesWithYears.map((c) => ({
+        ...c,
+        fiscal_years: fiscalYears?.filter((fy) => fy.company_id === c.id) ?? [],
+      }));
+    }
+
+    return { ...user, profile, companies: companiesWithYears } as Admin;
   } else {
-    // normal user → fetch their company
-    const { data: company } = await query.eq("user_id", user.id).single();
-    return { ...user, profile, company } as User;
+    // 🙋 normal user → fetch their single company
+    const { data: company, error: companyError } = await query
+      .eq("user_id", user.id)
+      .single();
+    if (!company || companyError) {
+      console.error(
+        "No company found for user:",
+        user.id,
+        companyError?.message
+      );
+      return null; // bail out → no User without a Company
+    }
+    const { data: fiscalYears } = await supabase
+      .from("fiscal_years")
+      .select("*")
+      .eq("company_id", company.id);
+
+    return {
+      ...user,
+      profile,
+      company: { ...company, fiscal_years: fiscalYears ?? [] },
+    } as User;
   }
 }

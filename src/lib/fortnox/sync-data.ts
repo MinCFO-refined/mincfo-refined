@@ -1,7 +1,11 @@
 import type { TablesInsert } from "@/types/supabase";
 import { createClient, getUser, User } from "../supabase/server";
 import Bottleneck from "bottleneck";
-
+import {
+  FortnoxFinancialYear,
+  FortnoxFinancialYearWrapList,
+  FortnoxVoucherDetail,
+} from "./types";
 // ----------------- Typed aliases from your generated types -----------------
 type VoucherInsert = TablesInsert<"fortnox_vouchers">;
 type TransactionInsert = TablesInsert<"fortnox_voucher_transactions">;
@@ -12,33 +16,6 @@ type FortnoxVoucherHeader = {
   VoucherSeries: string;
   VoucherNumber: number;
   Year: number;
-};
-
-type FortnoxVoucherDetail = {
-  Voucher: {
-    VoucherSeries: string;
-    VoucherNumber: number;
-    Year: number;
-    TransactionDate: string;
-    Description?: string | null;
-    Comments?: string | null;
-    ApprovalState?: number | null;
-    CostCenter?: string | null;
-    Project?: string | null;
-    ReferenceNumber?: string | null;
-    ReferenceType?: string | null;
-    VoucherRows?: Array<{
-      Account: number;
-      Debit?: number | null;
-      Credit?: number | null;
-      Description?: string | null;
-      TransactionInformation?: string | null;
-      Quantity?: number | null;
-      CostCenter?: string | null;
-      Project?: string | null;
-      Removed?: boolean | null;
-    }>;
-  };
 };
 
 async function getValidTokens() {
@@ -114,6 +91,48 @@ async function getValidTokens() {
 
   return { supabase, access_token, integrationId };
 }
+
+function getActiveFiscalYear(
+  years: FortnoxFinancialYear[]
+): FortnoxFinancialYear {
+  if (years.length === 1) {
+    // Only one year → mark it as active explicitly
+    return { ...years[0], Active: true };
+  }
+
+  const active = years.find((fy) => fy.Active);
+  if (active) return active;
+
+  // Fallback: return the first, but also mark it
+  return { ...years[0], Active: true };
+}
+
+export async function getFiscalYear(access_token: string) {
+  const res = await fetch("https://api.fortnox.se/3/financialyears", {
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${access_token}`,
+    },
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    throw new Error(
+      `Failed to fetch fiscal years: ${res.status} ${await res.text()}`
+    );
+  }
+
+  const data: FortnoxFinancialYearWrapList = await res.json();
+  const fiscal = getActiveFiscalYear(data.FinancialYears);
+  return {
+    from: fiscal.FromDate,
+    to: fiscal.ToDate,
+    method: fiscal.AccountingMethod,
+    chart: fiscal.AccountChartType,
+    active: fiscal.Active,
+    id: fiscal.Id,
+  };
+}
 // --- Rate limiting setup ---
 // Fortnox: 25 req / 5s AND 300 / minute (sliding window)
 // To respect sliding window and prevent bursts, add minTime spacing
@@ -145,22 +164,14 @@ async function limitedFetch<T>(
   });
 }
 export async function syncFortnox(user: User) {
-  const supabase = await createClient();
-
   // Hämta integration tokens
-  const { data: integration } = await supabase
-    .from("fortnox_integrations")
-    .select("*")
-    .eq("user_id", user.id)
-    .eq("is_active", true)
-    .single();
-
-  if (!integration) {
-    console.error("Ingen Fortnox-integration hittades");
+  const tokenData = await getValidTokens();
+  if (!tokenData) {
+    console.error("Ingen giltig Fortnox-integration hittades");
     return null;
   }
 
-  const { access_token, id: integrationId } = integration;
+  const { supabase, access_token, integrationId } = tokenData;
 
   // Hämta company
   const { data: company, error: companyError } = await supabase
@@ -172,6 +183,19 @@ export async function syncFortnox(user: User) {
   if (!company || companyError) {
     console.error("Misslyckades att hämta company:", companyError);
     return null;
+  }
+  const fiscal = await getFiscalYear(access_token);
+  if (fiscal) {
+    const { error: fiscalError } = await supabase.from("fiscal_years").insert({
+      fortnox_id: fiscal.id,
+      company_id: company.id,
+      from_date: fiscal.from,
+      to_date: fiscal.to,
+      account_chart_type: fiscal.chart,
+      accounting_method: fiscal.method,
+      is_active: fiscal.active ?? false,
+    });
+    if (fiscalError) console.error(fiscalError);
   }
 
   const headers = {
