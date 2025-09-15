@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { formatCurrencySEK } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
-import { FiscalYear, FortnoxKPI, FortnoxMetric } from "@/types/fortnox";
+import { DatabaseFiscalYear, FortnoxKPI, FortnoxMetric } from "@/types/fortnox";
 
 // Helper to render one KPI card
 function KpiCard({
@@ -67,7 +67,7 @@ export function SectionCards({
   fiscalYear,
 }: {
   data?: FortnoxKPI | null;
-  fiscalYear?: FiscalYear | FiscalYear[] | null;
+  fiscalYear?: DatabaseFiscalYear | DatabaseFiscalYear[] | null;
 }) {
   return (
     <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4">

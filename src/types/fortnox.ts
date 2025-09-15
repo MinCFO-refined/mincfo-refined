@@ -4,7 +4,7 @@ export interface Company {
   created_at: string;
   updated_at: string;
   organisation_number?: string;
-  fiscal_years?: FiscalYear[];
+  fiscal_years?: DatabaseFiscalYear[];
 }
 export type FortnoxVoucherDetail = {
   Voucher: {
@@ -67,7 +67,7 @@ export interface FortnoxVoucherTransactionRow {
   created_at: string | null;
 }
 
-export interface FiscalYear {
+export interface FortnoxFiscalYear {
   "@url"?: string; // API URL to this resource
   Id?: number; // Year id (integer)
   FromDate: string; // yyyy-MM-dd
@@ -77,8 +77,21 @@ export interface FiscalYear {
   Active?: boolean; // Only present if multiple years
 }
 
-export interface FiscalYearList {
-  FinancialYears: FiscalYear[];
+export interface FortnoxFiscalYearList {
+  FinancialYears: FortnoxFiscalYear[];
+}
+// Database type
+export interface DatabaseFiscalYear {
+  id: string;
+  company_id: string;
+  fortnox_id: number;
+  from_date: string; // ISO
+  to_date: string; // ISO
+  is_active: boolean;
+  account_chart_type: string | null;
+  accounting_method: string | null;
+  inserted_at: string | null;
+  updated_at: string | null;
 }
 
 export type FortnoxMonth =

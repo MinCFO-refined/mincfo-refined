@@ -5,8 +5,8 @@ import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { Database } from "@/types/supabase";
 import { Company } from "@/types/fortnox";
 import { isAdmin } from "../utils";
-import { FortnoxFinancialYear } from "@/types/fortnox";
-
+import resend, { Resend } from "resend";
+import { supabaseAdmin } from "./supabase-admin";
 // Define the profile type based on your database schema
 export interface Profile {
   id: string;
@@ -25,7 +25,6 @@ export interface Profile {
 export interface User extends SupabaseUser {
   profile?: Profile;
   company: Company;
-  fiscalYear?: FortnoxFinancialYear;
 }
 
 export interface Admin extends SupabaseUser {
@@ -130,4 +129,66 @@ export async function getUser(): Promise<User | Admin | null> {
       company: { ...company, fiscal_years: fiscalYears ?? [] },
     } as User;
   }
+}
+
+export async function inviteUser(email: string, password: string) {
+  const { data, error } = await supabaseAdmin.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true, // mark as confirmed so they can log in immediately
+  });
+  if (error) {
+    console.error(
+      "Supabase createUser failed:",
+      JSON.stringify(error, null, 2)
+    );
+    throw error;
+  }
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+
+  await resend.emails.send({
+    from: "onboarding@resend.dev",
+    to: email,
+    subject: "Ditt konto för MinCFO",
+    html: `
+      <div style="font-family: Arial, sans-serif; background-color: #f9fafb; padding: 20px;">
+        <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">
+          
+        
+          <div style="background: #4b3cfe; padding: 24px; text-align: center;">
+           
+          </div>
+
+       
+          <div style="padding: 32px; color: #333;">
+            <h2 style="margin: 0 0 16px; font-size: 20px; color: #111;">Välkommen till MinCFO!</h2>
+            <p style="margin: 0 0 24px; font-size: 14px; line-height: 1.5;">
+              Ett konto har skapats åt dig. Använd lösenordet nedan för att logga in första gången.
+              Du kan sedan byta lösenord i portalen.
+            </p>
+
+            <div style="background: #f2efe9; padding: 16px; border-radius: 8px; text-align: center; font-size: 18px; font-weight: bold; letter-spacing: 1px;">
+              ${password}
+            </div>
+
+            <p style="margin: 24px 0 0; font-size: 13px; color: #666; line-height: 1.5;">
+              Logga in på <a href="${
+                process.env.NEXT_PUBLIC_APP_URL
+              }/auth/login" style="color: #0070f3; text-decoration: none;">${
+      process.env.NEXT_PUBLIC_APP_URL
+    }/auth/login</a>
+            </p>
+          </div>
+
+          <!-- Footer -->
+          <div style="background: #f9fafb; padding: 16px; text-align: center; font-size: 12px; color: #999;">
+            &copy; ${new Date().getFullYear()} MinCFO. Alla rättigheter förbehållna.
+          </div>
+        </div>
+      </div>
+    `,
+  });
+
+  return data;
 }

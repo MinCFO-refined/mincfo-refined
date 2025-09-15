@@ -2,8 +2,8 @@ import type { TablesInsert } from "@/types/supabase";
 import { createClient, getUser, User } from "../supabase/server";
 import Bottleneck from "bottleneck";
 import {
-  FortnoxFinancialYear,
-  FortnoxFinancialYearWrapList,
+  FortnoxFiscalYear,
+  FortnoxFiscalYearList,
   FortnoxVoucherDetail,
 } from "@/types/fortnox";
 // ----------------- Typed aliases from your generated types -----------------
@@ -92,9 +92,7 @@ async function getValidTokens() {
   return { supabase, access_token, integrationId };
 }
 
-function getActiveFiscalYear(
-  years: FortnoxFinancialYear[]
-): FortnoxFinancialYear {
+function getActiveFiscalYear(years: FortnoxFiscalYear[]): FortnoxFiscalYear {
   if (years.length === 1) {
     // Only one year → mark it as active explicitly
     return { ...years[0], Active: true };
@@ -122,7 +120,7 @@ export async function getFiscalYear(access_token: string) {
     );
   }
 
-  const data: FortnoxFinancialYearWrapList = await res.json();
+  const data: FortnoxFiscalYearList = await res.json();
   const fiscal = getActiveFiscalYear(data.FinancialYears);
   return {
     from: fiscal.FromDate,

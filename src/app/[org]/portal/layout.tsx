@@ -13,17 +13,14 @@ export default async function Layout({
   const user = await getUser();
   if (!user) return null;
 
-  const userIsAdmin = isAdmin(user.profile || null);
+  const admin = isAdmin(user.profile || null);
 
   return (
     <SidebarWrapper>
-      {userIsAdmin ? (
-        <AdminSidebar
-          user={user as Admin}
-          companies={(user as Admin).companies || []}
-        />
+      {admin ? (
+        <AdminSidebar user={user as Admin} />
       ) : (
-        <AppSidebar user={user as User} company={(user as User).company} />
+        <AppSidebar user={user as User} />
       )}
 
       <div className="flex w-screen flex-col">

@@ -50,8 +50,9 @@ export function TeamSwitcher({
                       {activeCompany?.name || "Välj företag"}
                     </span>
                     <span className="truncate text-xs">
-                      {activeCompany?.organisation_number ||
-                        "Organisationsnummer"}
+                      {safeFormatOrgNumber(
+                        activeCompany?.organisation_number
+                      ) || "Organisationsnummer"}
                     </span>
                   </>
                 )}

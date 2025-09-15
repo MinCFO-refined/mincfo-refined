@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { formatCurrencySEK } from "@/lib/utils";
-import { FiscalYear, FortnoxKPI, FortnoxMetric } from "@/types/fortnox";
+import { DatabaseFiscalYear, FortnoxKPI, FortnoxMetric } from "@/types/fortnox";
 
 import { Metric } from "@/app/[org]/portal/dashboard/kpi-metric-switcher";
 import { Loader2 } from "lucide-react";
@@ -57,7 +57,7 @@ export function ChartAreaInteractive({
   selectedKpi,
 }: {
   data?: FortnoxKPI | null;
-  fiscalYear?: FiscalYear | FiscalYear[] | null;
+  fiscalYear?: DatabaseFiscalYear | DatabaseFiscalYear[] | null;
   selectedKpi: Metric;
 }) {
   const isMobile = useIsMobile();
@@ -76,14 +76,15 @@ export function ChartAreaInteractive({
   };
 
   // FY resolution kept only for enabling the toggle
-  const resolvedFY = useMemo<FiscalYear | null>(() => {
+  const resolvedFY = useMemo<DatabaseFiscalYear | null>(() => {
     if (!fiscalYear) return null;
     if (Array.isArray(fiscalYear)) {
-      const active = fiscalYear.find((f) => f.Active);
+      const active = fiscalYear.find((f) => f.is_active);
       if (active) return active;
       return (
         [...fiscalYear].sort(
-          (a, b) => new Date(b.ToDate).getTime() - new Date(a.ToDate).getTime()
+          (a, b) =>
+            new Date(b.to_date).getTime() - new Date(a.to_date).getTime()
         )[0] ?? null
       );
     }
