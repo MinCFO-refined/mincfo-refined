@@ -1,19 +1,26 @@
 "use client";
 
-import { IconCirclePlusFilled, IconMail, type Icon } from "@tabler/icons-react";
-import { type LucideIcon } from "lucide-react";
+import { type Icon } from "@tabler/icons-react";
+import { type LucideIcon, ChevronDown } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
+import {
+  Collapsible,
+  CollapsibleTrigger,
+  CollapsibleContent,
+} from "@/components/ui/collapsible";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { UserWithProfileAndCompanies } from "@/lib/supabase/server";
+import { User } from "@/lib/supabase/server";
 
 export function NavMain({
   items,
@@ -23,36 +30,58 @@ export function NavMain({
     title: string;
     url: string;
     icon?: Icon | LucideIcon;
-    adminView?: boolean;
+    children?: { title: string; url: string }[];
   }[];
-  user: UserWithProfileAndCompanies;
+  user: User;
 }) {
   const pathname = usePathname();
+
   return (
     <SidebarGroup>
       <SidebarGroupContent className="flex flex-col gap-2">
         <SidebarMenu>
-          {/* <SidebarMenuItem className="flex items-center gap-2">
-            <SidebarMenuButton
-              tooltip="Quick Create"
-              className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground min-w-8 duration-200 ease-linear"
-            >
-              <IconCirclePlusFilled />
-              <span>Quick Create</span>
-            </SidebarMenuButton>
-            <Button
-              size="icon"
-              className="size-8 group-data-[collapsible=icon]:opacity-0"
-              variant="outline"
-            >
-              <IconMail />
-              <span className="sr-only">Inbox</span>
-            </Button>
-          </SidebarMenuItem> */}
-        </SidebarMenu>
-        <SidebarMenu>
           {items.map((item) => {
             const isActive = pathname === item.url;
+
+            if (item.children) {
+              return (
+                <SidebarMenuItem key={item.title}>
+                  <Collapsible>
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton
+                        tooltip={item.title}
+                        className="group flex items-center justify-between !cursor-pointer transition-all duration-100"
+                      >
+                        <div className="flex items-center gap-2">
+                          {item.icon && <item.icon className="h-4 w-4" />}
+                          <span>{item.title}</span>
+                        </div>
+                        {/* right by default, down when open */}
+                        <ChevronDown className="h-4 w-4 -rotate-90 transition-transform group-data-[state=open]:rotate-0" />
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        {item.children.map((child) => {
+                          const isChildActive = pathname === child.url;
+                          return (
+                            <SidebarMenuSubItem key={child.title}>
+                              <SidebarMenuSubButton
+                                asChild
+                                isActive={isChildActive}
+                              >
+                                <Link href={child.url}>{child.title}</Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          );
+                        })}
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </SidebarMenuItem>
+              );
+            }
 
             return (
               <SidebarMenuItem key={item.title}>

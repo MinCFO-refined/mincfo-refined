@@ -3,10 +3,13 @@
 import * as React from "react";
 import {
   IconChartBar,
+  IconChartPie,
   IconDashboard,
   IconHelp,
+  IconReceipt2,
   IconSearch,
   IconSettings,
+  IconWallet,
 } from "@tabler/icons-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -21,77 +24,102 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { User } from "@/lib/supabase/server";
-import { Company } from "@/types/fortnox";
+
 import Image from "next/image";
-import { Link } from "lucide-react";
-import { TeamSwitcher } from "./team-switcher";
+import { FileBarChart, Link, TrendingUp } from "lucide-react";
+import { slugify } from "@/lib/utils";
 
-const data = {
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "/org/portal/dashboard",
-      icon: IconDashboard,
-    },
-
-    {
-      title: "Analys",
-      url: "/org/portal/analysis",
-      icon: IconChartBar,
-    },
-
-    {
-      title: "Fortnox",
-      url: "/org/portal/fortnox-integration",
-      icon: Link,
-    },
-  ],
-  navClouds: [],
-  navSecondary: [
-    {
-      title: "Inställningar",
-      url: "#",
-      icon: IconSettings,
-    },
-    {
-      title: "Support",
-      url: "#",
-      icon: IconHelp,
-    },
-    {
-      title: "Sök",
-      url: "#",
-      icon: IconSearch,
-    },
-  ],
-  documents: [
-    // {
-    //   name: "Data Library",
-    //   url: "#",
-    //   icon: IconDatabase,
-    // },
-    // {
-    //   name: "Reports",
-    //   url: "#",
-    //   icon: IconReport,
-    // },
-    // {
-    //   name: "Word Assistant",
-    //   url: "#",
-    //   icon: IconFileWord,
-    // },
-  ],
-};
 export interface AppSidebarClientProps
   extends React.ComponentProps<typeof Sidebar> {
   user: User;
-  company: Company;
 }
-export function AppSidebarClient({
-  company,
-  user,
-  ...props
-}: AppSidebarClientProps) {
+export function AppSidebarClient({ user, ...props }: AppSidebarClientProps) {
+  const companySlug = `${slugify(user.company.name)}`;
+  const data = {
+    navMain: [
+      {
+        title: "Översikt",
+        url: `/${companySlug}/portal/dashboard`,
+        icon: IconDashboard,
+      },
+      {
+        title: "Omsättning",
+        url: `/${companySlug}/portal/revenue`,
+        icon: TrendingUp,
+        children: [
+          { title: "Per månad", url: "/org/portal/revenue/monthly" },
+          { title: "Per år", url: "/org/portal/revenue/yearly" },
+          { title: "Kunder", url: "/org/portal/revenue/customers" },
+        ],
+      },
+      {
+        title: "Vinst",
+        url: `/${companySlug}/portal/profit`,
+        icon: IconWallet,
+        children: [
+          { title: "Bruttovinst", url: "/org/portal/profit/gross" },
+          { title: "Rörelsevinst", url: "/org/portal/profit/operating" },
+          { title: "Nettoresultat", url: "/org/portal/profit/net" },
+        ],
+      },
+      {
+        title: "Kostnader",
+        url: `/${companySlug}/portal/costs`,
+        icon: IconReceipt2,
+        children: [
+          { title: "Personalkostnader", url: "/org/portal/costs/personnel" },
+          { title: "Driftskostnader", url: "/org/portal/costs/operations" },
+          { title: "Övriga kostnader", url: "/org/portal/costs/other" },
+        ],
+      },
+      {
+        title: "Bruttomarginal",
+        url: `/${companySlug}/portal/gross-margin`,
+        icon: IconChartPie,
+        children: [
+          { title: "Per produkt", url: "/org/portal/gross-margin/product" },
+          { title: "Per kategori", url: "/org/portal/gross-margin/category" },
+          { title: "Över tid", url: "/org/portal/gross-margin/timeline" },
+        ],
+      },
+      {
+        title: "Rapporter",
+        url: `/${companySlug}/portal/reports`,
+        icon: FileBarChart,
+      },
+
+      {
+        title: "Analys",
+        url: `/${companySlug}/portal/analysis`,
+        icon: IconChartBar,
+      },
+
+      {
+        title: "Fortnox",
+        url: `/${companySlug}/portal/fortnox-integration`,
+        icon: Link,
+      },
+    ],
+    navClouds: [],
+    navSecondary: [
+      {
+        title: "Inställningar",
+        url: "#",
+        icon: IconSettings,
+      },
+      {
+        title: "Support",
+        url: "#",
+        icon: IconHelp,
+      },
+      {
+        title: "Sök",
+        url: "#",
+        icon: IconSearch,
+      },
+    ],
+  };
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>

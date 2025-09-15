@@ -37,7 +37,7 @@ export type Database = {
           created_at: string
           id: string
           name: string
-          organisation_number: string | null
+          organisation_number: string
           updated_at: string
           user_id: string | null
         }
@@ -45,7 +45,7 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
-          organisation_number?: string | null
+          organisation_number: string
           updated_at?: string
           user_id?: string | null
         }
@@ -53,7 +53,7 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
-          organisation_number?: string | null
+          organisation_number?: string
           updated_at?: string
           user_id?: string | null
         }
@@ -114,7 +114,8 @@ export type Database = {
         Row: {
           account_chart_type: string | null
           accounting_method: string | null
-          company_id: string | null
+          company_id: string
+          fortnox_id: number
           from_date: string
           id: string
           inserted_at: string | null
@@ -125,7 +126,8 @@ export type Database = {
         Insert: {
           account_chart_type?: string | null
           accounting_method?: string | null
-          company_id?: string | null
+          company_id: string
+          fortnox_id: number
           from_date: string
           id?: string
           inserted_at?: string | null
@@ -136,7 +138,8 @@ export type Database = {
         Update: {
           account_chart_type?: string | null
           accounting_method?: string | null
-          company_id?: string | null
+          company_id?: string
+          fortnox_id?: number
           from_date?: string
           id?: string
           inserted_at?: string | null
@@ -394,13 +397,17 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      get_company_kpi: {
+        Args: { p_company_id: string } | { p_org_number: string }
+        Returns: Json
+      }
+      get_company_kpi_by_orgnr: {
+        Args: { p_org_number: string }
+        Returns: Json
+      }
       get_company_revenue: {
-        Args: {
-          p_company_id: string
-          p_end_date?: string
-          p_start_date?: string
-        }
-        Returns: number
+        Args: { p_company_id: string }
+        Returns: Json
       }
       is_admin: {
         Args: { user_id: string }

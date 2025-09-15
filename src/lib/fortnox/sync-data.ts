@@ -5,7 +5,7 @@ import {
   FortnoxFinancialYear,
   FortnoxFinancialYearWrapList,
   FortnoxVoucherDetail,
-} from "./types";
+} from "@/types/fortnox";
 // ----------------- Typed aliases from your generated types -----------------
 type VoucherInsert = TablesInsert<"fortnox_vouchers">;
 type TransactionInsert = TablesInsert<"fortnox_voucher_transactions">;
@@ -187,7 +187,7 @@ export async function syncFortnox(user: User) {
   const fiscal = await getFiscalYear(access_token);
   if (fiscal) {
     const { error: fiscalError } = await supabase.from("fiscal_years").insert({
-      fortnox_id: fiscal.id,
+      fortnox_id: fiscal.id!,
       company_id: company.id,
       from_date: fiscal.from,
       to_date: fiscal.to,

@@ -30,8 +30,10 @@ export default async function Layout({
         <header>
           <Nav />
         </header>
-        <div className="p-2 pt-0">
-          <main className="bg-background flex-1 h-screen p-6">{children}</main>
+        <div className="px-2">
+          <main className="bg-background flex-1 p-6 min-h-[95.5dvh]">
+            {children}
+          </main>
         </div>
       </div>
     </SidebarWrapper>

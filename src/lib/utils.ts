@@ -20,3 +20,21 @@ export function safeFormatOrgNumber(input: string | undefined): string | null {
 
   return digits.slice(0, 6) + "-" + digits.slice(6);
 }
+
+export function formatCurrencySEK(amount: number): string {
+  // Format with up to 2 decimals, but don't force them
+  return new Intl.NumberFormat("sv-SE", {
+    style: "decimal",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(amount);
+}
+
+export function slugify(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize("NFD") // remove diacritics
+    .replace(/[\u0300-\u036f]/g, "") // strip accents
+    .replace(/[^a-z0-9]+/g, "-") // non-alphanumeric → hyphen
+    .replace(/^-+|-+$/g, ""); // trim leading/trailing hyphens
+}

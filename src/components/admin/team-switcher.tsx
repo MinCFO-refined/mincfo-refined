@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { ChevronsUpDown, Plus } from "lucide-react";
+import { ChevronsUpDown, Loader2, Plus } from "lucide-react";
 
 import {
   DropdownMenu,
@@ -20,14 +19,18 @@ import {
 import { Company } from "@/types/fortnox";
 import { safeFormatOrgNumber } from "@/lib/utils";
 
-export function TeamSwitcher({ companies }: { companies?: Company[] }) {
+export function TeamSwitcher({
+  companies,
+  activeCompany,
+  onCompanyChange,
+  loading,
+}: {
+  companies?: Company[];
+  activeCompany: Company | null;
+  onCompanyChange: (company: Company) => void;
+  loading: boolean;
+}) {
   const { isMobile } = useSidebar();
-
-  const [activeCompany, setActiveCompany] = useState(companies?.[0]);
-
-  if (!activeCompany) {
-    return null;
-  }
 
   return (
     <SidebarMenu>
@@ -39,12 +42,19 @@ export function TeamSwitcher({ companies }: { companies?: Company[] }) {
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">
-                  {activeCompany.name}
-                </span>
-                <span className="truncate text-xs">
-                  {activeCompany?.organisation_number}
-                </span>
+                {loading ? (
+                  <Loader2 className="animate-spin" />
+                ) : (
+                  <>
+                    <span className="truncate font-medium">
+                      {activeCompany?.name || "Välj företag"}
+                    </span>
+                    <span className="truncate text-xs">
+                      {activeCompany?.organisation_number ||
+                        "Organisationsnummer"}
+                    </span>
+                  </>
+                )}
               </div>
               <ChevronsUpDown className="ml-auto" />
             </SidebarMenuButton>
@@ -56,12 +66,12 @@ export function TeamSwitcher({ companies }: { companies?: Company[] }) {
             sideOffset={4}
           >
             <DropdownMenuLabel className="text-muted-foreground text-xs">
-              Companies
+              Kunder
             </DropdownMenuLabel>
             {companies?.map((company, i) => (
               <DropdownMenuItem
                 key={company.name || i}
-                onClick={() => setActiveCompany(company)}
+                onClick={() => onCompanyChange(company)}
                 className="gap-2 p-2"
               >
                 <div className="flex flex-col justify-center">
@@ -78,7 +88,7 @@ export function TeamSwitcher({ companies }: { companies?: Company[] }) {
                 <Plus className="size-4" />
               </div>
               <div className="text-muted-foreground font-medium">
-                Add company
+                Lägg till kund
               </div>
             </DropdownMenuItem>
           </DropdownMenuContent>

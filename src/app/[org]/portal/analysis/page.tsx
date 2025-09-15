@@ -1,3 +1,3 @@
 export default function AnalysisPage() {
-  return;
+  return <div className="flex justify-center items-center">Analys</div>;
 }

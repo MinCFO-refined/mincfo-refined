@@ -5,6 +5,7 @@ import {
   IconDotsVertical,
   IconLogout,
   IconNotification,
+  IconShield,
   IconUserCircle,
 } from "@tabler/icons-react";
 
@@ -24,11 +25,11 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { User, Admin } from "@/lib/supabase/server";
+import { Admin } from "@/lib/supabase/server";
 import { signOut } from "@/lib/auth-actions";
-import { ModeToggle } from "./ui/mode-toggle";
+import { ModeToggle } from "../ui/mode-toggle";
 
-export function NavUser({ user }: { user: User }) {
+export function NavUser({ user }: { user: Admin }) {
   const { isMobile } = useSidebar();
 
   return (
@@ -40,9 +41,8 @@ export function NavUser({ user }: { user: User }) {
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <Avatar className="h-8 w-8 rounded-lg grayscale">
-                {/* <AvatarImage src={user.avatar} alt={user.name} /> */}
-                <AvatarFallback className="rounded-lg"></AvatarFallback>
+              <Avatar className="h-8 w-8 rounded-lg flex items-center justify-center bg-muted">
+                <IconShield className="h-4.5 w-4.5 text-muted-foreground fill-muted-foreground" />
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">
@@ -63,9 +63,8 @@ export function NavUser({ user }: { user: User }) {
           >
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                <Avatar className="h-8 w-8 rounded-lg">
-                  {/* <AvatarImage src={user.avatar} alt={user.name} /> */}
-                  <AvatarFallback className="rounded-lg"></AvatarFallback>
+                <Avatar className="h-8 w-8 rounded-lg flex items-center justify-center bg-muted">
+                  <IconShield className="h-4.5 w-4.5 text-muted-foreground fill-muted-foreground" />
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">
@@ -83,14 +82,7 @@ export function NavUser({ user }: { user: User }) {
                 <IconUserCircle />
                 Account
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <IconCreditCard />
-                Billing
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <IconNotification />
-                Notifications
-              </DropdownMenuItem>
+
               <ModeToggle />
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

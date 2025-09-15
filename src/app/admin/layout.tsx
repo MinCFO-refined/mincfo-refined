@@ -14,7 +14,7 @@ export default async function Layout({
   if (!user || !isAdmin(user.profile || null)) return null;
   return (
     <SidebarWrapper>
-      <AdminSidebar user={user} companies={(user as Admin).companies || []} />
+      <AdminSidebar user={user as Admin} />
 
       <div className="flex w-screen flex-col">
         <header>

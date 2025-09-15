@@ -5,7 +5,7 @@ import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { Database } from "@/types/supabase";
 import { Company } from "@/types/fortnox";
 import { isAdmin } from "../utils";
-import { FortnoxFinancialYear } from "../fortnox/types";
+import { FortnoxFinancialYear } from "@/types/fortnox";
 
 // Define the profile type based on your database schema
 export interface Profile {

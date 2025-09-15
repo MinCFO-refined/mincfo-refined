@@ -2,12 +2,29 @@
 import { ChartAreaInteractive } from "@/components/chart-area-interactive";
 import { SectionCards } from "@/components/section-cards";
 import { useKpi, useUser } from "@/hooks/useQuery";
-import { KpiMetricSwitcher, Metric } from "./kpi-metric-switcher"; // 👈 import Metric type
-import { useState } from "react";
+import {
+  KpiMetricSwitcher,
+  Metric,
+} from "@/app/[org]/portal/dashboard/kpi-metric-switcher";
+import { useState, useMemo } from "react";
+import { usePathname } from "next/navigation";
 
 export default function Dashboard() {
+  const pathname = usePathname();
+
+  // 👇 extract companyId from slug part of URL
+  const orgNumber = useMemo(() => {
+    if (!pathname) return undefined;
+    const parts = pathname.split("/");
+    const slug = parts[2]; // e.g. "devotion-ventures-5591031082"
+    if (!slug) return undefined;
+
+    const pieces = slug.split("-");
+    return pieces[pieces.length - 1]; // last segment is orgNr
+  }, [pathname]);
+
   const { data: user } = useUser();
-  const { data: kpiData } = useKpi();
+  const { data: kpiData } = useKpi(orgNumber); // ✅ pass companyId
 
   const [selectedKpi, setSelectedKpi] = useState<Metric>("revenue");
 

@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient, getUser, User } from "../supabase/server";
-import { FortnoxVoucherRow } from "./types";
+import { FortnoxKPI, FortnoxVoucherRow } from "@/types/fortnox";
 
 export async function connectToFortnox(): Promise<{
   connected: boolean;
@@ -54,23 +54,30 @@ export async function getVouchers() {
   return { vouchers: (data ?? []) as FortnoxVoucherRow[], error: null };
 }
 
-export async function getCompanyRevenue(startDate?: string, endDate?: string) {
-  const user = (await getUser()) as User | null;
-  if (!user || !user.company?.id) throw new Error("User or company not found");
+export async function getCompanyKpi(orgNumber?: string) {
+  // If orgNumber is not passed, fallback to logged in user
+  let effectiveOrgNumber = orgNumber;
+
+  if (!effectiveOrgNumber) {
+    const user = (await getUser()) as User | null;
+    if (!user || !user.company?.organisation_number) {
+      throw new Error("User or company/orgNumber not found");
+    }
+    effectiveOrgNumber = user.company.organisation_number;
+  }
 
   const supabase = await createClient();
 
-  const { data, error } = await supabase.rpc("get_company_revenue", {
-    p_company_id: user.company.id, // always from server-side user
-    p_start_date: startDate ?? undefined,
-    p_end_date: endDate ?? undefined,
+  const { data, error } = await supabase.rpc("get_company_kpi_by_orgnr", {
+    p_org_number: effectiveOrgNumber,
   });
 
   if (error) {
-    console.error("❌ Error fetching revenue:", error.message);
+    console.error("❌ Error fetching KPI:", error.message);
     throw error;
   }
-  console.log(data);
 
-  return data as number; // revenue is numeric in Postgres
+  console.dir(data, { depth: null });
+
+  return data as FortnoxKPI | null;
 }
